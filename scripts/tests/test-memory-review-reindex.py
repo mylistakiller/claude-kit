@@ -23,6 +23,7 @@ SCRIPT = str(Path(__file__).resolve().parents[1] / "memory-review.py")
 spec = importlib.util.spec_from_file_location("memrev", SCRIPT)
 mr = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mr)
+REAL_MEM = mr.MEM
 
 
 def memory_file(store, name, description):
@@ -40,6 +41,10 @@ def run(store, index_line, name, **kw):
         os.path.join(store, ".log.json"),
         os.path.join(store, ".trash"),
     )
+    # une constante de chemin oubliee ecrirait dans le vrai store
+    leaks = sorted(k for k, v in vars(mr).items() if isinstance(v, str) and v.startswith(REAL_MEM))
+    if leaks:
+        raise SystemExit("constantes encore sur le vrai store : %s" % ", ".join(leaks))
     io.open(mr.INDEX, "w", encoding="utf-8").write("# Memory Index\n\n" + index_line + "\n")
     args = argparse.Namespace(name=name, hook=None, label=None, dry_run=False)
     for k, v in kw.items():
