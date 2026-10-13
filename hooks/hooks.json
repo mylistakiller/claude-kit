@@ -1,0 +1,225 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/auto-approve-readonly.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/format-edited-file.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/check-edited-skill.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/check-apply-script.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__mysql-prod__mysql_query|mcp__clickhouse-prod__run_query|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/prod-access-failure-hint.py\"",
+            "timeout": 20
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Ll]inear.*__save_issue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-linear-issue.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Ll]inear.*__get_issue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/linear-incomplete-hint.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "mcp__mysql-prod__mysql_query|mcp__clickhouse-prod__run_query",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-prod-sql.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-prod-exec.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__claude_ai_Linear__save_issue|mcp__claude_ai_Linear__save_comment|mcp__plugin_engineering_linear__save_issue|mcp__plugin_engineering_linear__save_comment|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-published-dashes.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-pr-evidence.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/log-skill-usage.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*[Ll]inear.*__save_issue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-linear-issue.py\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-agent-effort.py\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-falsify-rounds.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|mcp__.*[Ll]inear.*__(save_.*|submit_diff_review)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/guard-ai-attribution.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/prod-preflight.sh\"",
+            "timeout": 55
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/memory-review-due.sh\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/upstream-watch-due.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/verdict-evidence-guard.py\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-name-guard.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/investigate-guard.py\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/log-skill-usage.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

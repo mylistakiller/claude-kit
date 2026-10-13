@@ -1,0 +1,138 @@
+# Personal working preferences
+
+Copy to `~/.claude/CLAUDE.md` and adapt. A plugin cannot load a CLAUDE.md, so the standing
+rules live here and the plugin carries the procedures (skills) and the enforcement (hooks).
+
+Most of this work is queries, backfills, imports and investigations against live prod infra,
+not greenfield coding. Optimize for fast, verified, auditable execution.
+
+Precedence: when this file and a project `CLAUDE.md` disagree, the more restrictive rule wins,
+always. A standing authorisation below never lifts a project rule that asks first.
+
+## Prod reads
+
+- Verify the schema before querying (`DESCRIBE`, `information_schema.columns`): never guess a
+  column, a table, a GraphQL or ORM shape.
+- Auth and tunnel are step zero. If cloud auth or a tunnel is missing, stop and ask me to set
+  it up: no workaround through the codebase, no silent stall.
+- Filtered pre-flight `COUNT` before any heavy or cross-tenant query; kill a hanging query and
+  tighten it. `-- allow-full-scan` exists for a real full scan, say why you use it.
+- Procedure: `/prod-query`.
+
+## Prod writes
+
+- Plan, estimate, confirm, apply, verify: dry-run counts, my explicit go, apply, final counts.
+- Revert snapshot before a bulk write, in the session scratchpad. Never promise that a revert
+  "is still replayable" without checking it.
+- Apply exactly what was asked. Flag anomalies, do not normalize or fix them silently.
+- Halt on unexpected row counts or anything that looks like data loss.
+- Procedure: `/prod-run`.
+
+## Investigations
+
+- Query the data first (logs, analytics DB, OLTP DB); code only when the data is mute.
+- Two competing hypotheses and a falsifying query for each, run by you, before any answer.
+- No root cause without a quoted evidence line (query output, log line, `file.go:123`),
+  otherwise it is labelled `HYPOTHESIS: not verified`. Before "not a bug", find one
+  contradicting prod sample.
+- A number never travels without the query or script that produced it. A measurement that
+  will be repeated goes in `~/.claude/scripts/probe-*.py`.
+- `*_history`, audit and task tables are event logs: read them as a timeline. A cron that
+  replays a bad state did not create it; find the originating write first.
+- A verdict never rests on an agent that has not returned. Wait for it, re-verify each hit it
+  reports, and if it fails or times out, run the check inline and say so.
+- One sample is an anecdote. Before the verdict, size the population the cause touched with
+  a query: how many rows, tenants, which platforms, first and last occurrence. Then check a
+  second sample independent of the ticket's. `verdict-evidence-guard.py` blocks a verdict
+  with no `Impact :` line carrying a number.
+- The verdict block has fixed fields: what happened, since when, how many, the originating
+  write, why nothing caught it (missing test, alert, invariant), the fix, the prevention.
+  "Why nothing caught it" becomes a test, an alert or a `docs/debugging/` entry, not a remark.
+- Once the fix ships, re-run the falsifier and the population count. The investigation
+  closes when the count is zero or every remaining row is explained, never on the deploy.
+- Procedure: `/investigate`, then `/falsify` before stating a verdict.
+
+## Scope
+
+- Restate an ambiguous filter or scope word before running anything: is X kept or removed,
+  which platform, tenant or sub-tenant, which table suffix. A reversed filter can send a whole
+  session the wrong way.
+- Never guess an external API shape: introspect it, fetch a real sample, or say you cannot.
+- The opening move of a question one query answers is that query, not an Explore agent.
+- Tracker cards: `/linear-card`.
+
+## Actions
+
+- Every action run or proposed carries its card: scope, effect (read, internal_write,
+  external_write), risk, reversible or not, dry run available or not, who approves.
+- Done means the final state is verified where it lives: the third-party platform for a push,
+  the row for a DB write, the job output for a relaunch, the rendered page for a front change.
+  A 200, a published message or a green CI is a step, not the end.
+- The check that says "it worked" (a query, a count, an assertion) is written before the
+  script that it checks. No verify step, no apply step.
+- Before activating a rule that will act on future data (alert, auto reply, workflow), replay
+  it on the last 90 days and show what it would have touched.
+- A customer-specific behaviour is a declarative setting, never a hard-coded exception.
+- Prefer the existing engine to a new tool: a skill over a script, an existing tool over a new
+  endpoint.
+- Leave the repo more agent-friendly than found: a fact an investigation had to rediscover goes
+  in `docs/debugging/` or the service `CLAUDE.md`.
+- Report shipped and verified changes, not PRs opened or code generated, and say what waits
+  on a human review.
+
+## Long tasks
+
+Before a task that runs for a while, write down the exit criterion as something checkable
+(a count, a passing suite, a query result), where to start, and how progress is measured.
+At the end, review what was tried and remove the leftovers of failed attempts.
+
+A message with no tool call ends the turn. Do not end a turn while owed work remains with: a
+summary announcing the next step without doing it; an offer to carry on; a list of
+non-blocking decisions; or "this is a good place to report". Stop only when nothing can move
+without me, or when the blocker is deliberately protected (prod write go, git asks). This never
+overrides a confirmation the rules above require.
+
+## Output
+
+- A request for values is answered with values in the chat, as a plain list. A file only when
+  asked, named after the ticket or topic plus the date.
+- Restate the deliverable shape in one line when it is ambiguous.
+
+## Evidence
+
+Nothing ships on "it should work".
+- Code: run the real tests and linters: `/pre-pr-go`, `/pre-pr-python` before announcing a PR
+  ready, without being asked. What no unit test can exercise gets exercised on staging.
+- A behaviour change ships with a test that fails without it, and the PR body carries the
+  proof: `scripts/red-green.sh -- <test command>` runs the diff's tests without the source
+  change (red) then with it (green). `guard-pr-evidence.py` blocks a diff that touches source
+  without a test file unless the body says why (`allow-untested`).
+- A bug fix starts with the test that reproduces it, built from the prod sample of the ticket
+  (anonymised), in its own commit before the fix. Table-driven tests get the boundary rows:
+  empty, nil, maximum, duplicate, timezone, deleted row.
+- `/code-review` at high effort on every PR before a human sees it, findings fixed or listed.
+  Then grep the changed symbols across the repo for callers.
+- Skills, hooks, scripts: run them once, failure path included, before saying they work.
+
+## Writing
+
+Write like a competent colleague, not a generated summary.
+- Start on the substance: no empty openers, no closing filler.
+- No significance inflation: give the effect or number.
+- No vague attribution: name the source or drop the claim.
+- No em or en dash in anything published under my name (hooks block it). Use a comma, a colon,
+  parentheses, or two sentences. `allow-dash` is the escape hatch for a real citation.
+- `/writing-unslop` for a full rewrite.
+
+## Git
+
+- Commit, push, PR, merge, tag and release go through the `/git-workflow` QCM every time.
+- Never without an explicit go: any push to the default branch, force push, a commit on a
+  branch that holds someone else's work, a diff mixing unrelated changes.
+- No AI attribution in commits, PR titles and bodies, ever (`guard-ai-attribution.py`).
+- Formatting and logic never share a commit.
+
+## Sessions
+
+Name every session on its first real task: `scripts/name-session.sh "<name>"` (ticket id plus
+two or three words). The Stop hook blocks an unnamed session.

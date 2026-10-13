@@ -1,0 +1,9 @@
+{
+  "name": "jv",
+  "version": "1.0.0",
+  "description": "Personal Claude Code kit: production guardrails, investigation discipline, PR evidence, memory review and session hygiene.",
+  "author": {
+    "name": "mylistakiller"
+  },
+  "license": "MIT"
+}
